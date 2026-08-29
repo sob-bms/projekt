@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         cacheDirectory=".phpunit.cache">
+    <testsuites>
+        <testsuite name="BMS Projekter">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <!-- Testene kører altid mod en dedikeret testdatabase, aldrig mod
+             udviklings- eller produktionsdatabasen. Overskriv med jeres eget
+             testdatabasenavn/opkoblingsoplysninger hvis nødvendigt - navnet
+             SKAL indeholde "test" (håndhæves i tests/bootstrap.php). -->
+        <env name="DB_NAME" value="bms_projekt_test"/>
+    </php>
+</phpunit>

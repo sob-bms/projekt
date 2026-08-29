@@ -1,121 +1,215 @@
 <?php
 require __DIR__ . '/inc/bootstrap.php';
+$bruger = kraev_rolle([ROLLE_REDAKTOER, ROLLE_ADMINISTRATOR]);
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
 $projekt = [
-    'navn' => '', 'adresse' => '', 'status' => 'Tilbud', 'projektsum' => '',
-    'salgsansvarlig' => '', 'kontaktperson_navn' => '', 'kontaktperson_telefon' => '',
-    'kontaktperson_email' => '', 'opstartsdato' => '', 'slutdato' => '', 'noter' => '',
+    'navn' => '', 'lead' => '', 'adresse' => '', 'postnummer' => '', 'by_navn' => '',
+    'stadie' => '', 'enterpriseform' => '', 'projektsum' => '',
+    'byggestart_maaned' => '', 'byggestart_bekraeftet' => 0, 'byggeslut_maaned' => '',
+    'aabenlukket' => 'Åben', 'salgsresultat' => 'Ikke afgjort', 'tabt_aarsag' => '', 'tabt_aarsag_note' => '',
+    'antal_plan' => '', 'kaelder' => '', 'antal_boliger' => '', 'ekstern_link' => '', 'noter' => '',
 ];
-$tilknyttedeUe = [];
+$tilknyttedeAnsvarlige = []; // bruger_id => primaer(bool)
+$tilknyttedeVirksomheder = [];
+$tilknyttedeKontakter = [];
 
 if ($id) {
-    $stmt = $pdo->prepare('SELECT * FROM projekter WHERE id = ?');
-    $stmt->execute([$id]);
-    $fundet = $stmt->fetch();
+    $fundet = hent_projekt_detaljer($pdo, $id);
     if (!$fundet) {
         http_response_code(404);
         die('Projekt ikke fundet.');
     }
     $projekt = $fundet;
-
-    $stmt = $pdo->prepare('SELECT underentreprenor_id, aftalt_sum FROM projekt_underentreprenorer WHERE projekt_id = ?');
-    $stmt->execute([$id]);
-    foreach ($stmt->fetchAll() as $row) {
-        $tilknyttedeUe[$row['underentreprenor_id']] = $row['aftalt_sum'];
+    foreach ($fundet['ansvarlige'] as $a) {
+        $tilknyttedeAnsvarlige[(int)$a['id']] = (bool)$a['primaer'];
     }
+    $tilknyttedeVirksomheder = $fundet['virksomheder'];
+    $tilknyttedeKontakter = $fundet['kontakter'];
 }
 
-$alleUe = $pdo->query('SELECT id, navn, fag FROM underentreprenorer ORDER BY navn')->fetchAll();
+$alleBrugere = hent_brugere_liste($pdo);
+$alleVirksomheder = hent_virksomheder_liste($pdo);
 
 require __DIR__ . '/inc/header.php';
 ?>
 <h1><?= $id ? 'Rediger projekt' : 'Nyt projekt' ?></h1>
-<form method="post" action="projekt-gem.php">
+<form method="post" action="projekt-gem.php" id="projekt-formular">
     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
     <?php if ($id): ?><input type="hidden" name="id" value="<?= (int)$id ?>"><?php endif; ?>
 
-    <label>Navn *
-        <input type="text" name="navn" required value="<?= e($projekt['navn']) ?>">
-    </label>
-    <label>Adresse
-        <input type="text" name="adresse" value="<?= e($projekt['adresse']) ?>">
-    </label>
-    <label>Status
-        <select name="status">
-            <?php foreach (STATUS_LISTE as $s): ?>
-                <option value="<?= e($s) ?>" <?= $projekt['status'] === $s ? 'selected' : '' ?>><?= e($s) ?></option>
-            <?php endforeach; ?>
-        </select>
-    </label>
-    <label>Projektsum (kr.)
-        <input type="number" step="0.01" name="projektsum" value="<?= e((string)$projekt['projektsum']) ?>">
-    </label>
-    <label>Salgsansvarlig
-        <input type="text" name="salgsansvarlig" value="<?= e($projekt['salgsansvarlig']) ?>">
-    </label>
-    <label>Kontaktperson
-        <input type="text" name="kontaktperson_navn" value="<?= e($projekt['kontaktperson_navn']) ?>">
-    </label>
-    <label>Telefon
-        <input type="text" name="kontaktperson_telefon" value="<?= e($projekt['kontaktperson_telefon']) ?>">
-    </label>
-    <label>E-mail
-        <input type="email" name="kontaktperson_email" value="<?= e($projekt['kontaktperson_email']) ?>">
-    </label>
-    <label>Opstartsdato
-        <input type="date" name="opstartsdato" value="<?= e($projekt['opstartsdato']) ?>">
-    </label>
-    <label>Slutdato
-        <input type="date" name="slutdato" value="<?= e($projekt['slutdato']) ?>">
-    </label>
-    <label>Noter
-        <textarea name="noter" rows="4"><?= e($projekt['noter']) ?></textarea>
-    </label>
+    <fieldset>
+        <legend>Projektoplysninger</legend>
+        <label>Projekt-/sagsnavn *
+            <input type="text" name="navn" required value="<?= e($projekt['navn']) ?>">
+        </label>
+        <label>Lead/leadkilde
+            <input type="text" name="lead" value="<?= e($projekt['lead']) ?>">
+        </label>
+        <label>Adresse
+            <input type="text" name="adresse" value="<?= e($projekt['adresse']) ?>">
+        </label>
+        <label>Postnummer
+            <input type="text" name="postnummer" maxlength="10" value="<?= e($projekt['postnummer']) ?>">
+        </label>
+        <label>By
+            <input type="text" name="by_navn" value="<?= e($projekt['by_navn']) ?>">
+        </label>
+        <label>Stadie
+            <input type="text" name="stadie" value="<?= e($projekt['stadie']) ?>">
+        </label>
+        <label>Enterpriseform
+            <input type="text" name="enterpriseform" value="<?= e($projekt['enterpriseform']) ?>">
+        </label>
+        <label>Projektsum (kr.)
+            <input type="number" step="0.01" min="0" name="projektsum" value="<?= e((string)$projekt['projektsum']) ?>">
+        </label>
+    </fieldset>
 
     <fieldset>
-        <legend>Underentreprenører</legend>
-        <table id="ue-tabel">
-            <thead><tr><th>Underentreprenør</th><th>Aftalt sum (kr.)</th><th></th></tr></thead>
+        <legend>Tidsplan</legend>
+        <label>Byggestart
+            <input type="month" name="byggestart_maaned" value="<?= e($projekt['byggestart_maaned']) ?>">
+        </label>
+        <label class="inline">
+            <input type="checkbox" name="byggestart_bekraeftet" value="1" style="display:inline-block;width:auto;" <?= $projekt['byggestart_bekraeftet'] ? 'checked' : '' ?>>
+            Byggestart bekræftet
+        </label>
+        <label>Byggeslut
+            <input type="month" name="byggeslut_maaned" value="<?= e($projekt['byggeslut_maaned']) ?>">
+        </label>
+    </fieldset>
+
+    <fieldset>
+        <legend>Status og salg</legend>
+        <label>Åben/lukket
+            <select name="aabenlukket">
+                <?php foreach (AABENLUKKET_LISTE as $s): ?>
+                    <option value="<?= e($s) ?>" <?= $projekt['aabenlukket'] === $s ? 'selected' : '' ?>><?= e($s) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </label>
+        <label>Salgsresultat
+            <select name="salgsresultat" id="salgsresultat-vaelg">
+                <?php foreach (SALGSRESULTAT_LISTE as $s): ?>
+                    <option value="<?= e($s) ?>" <?= $projekt['salgsresultat'] === $s ? 'selected' : '' ?>><?= e($s) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </label>
+        <div id="tabt-aarsag-felter" <?= $projekt['salgsresultat'] === 'Tabt' ? '' : 'hidden' ?>>
+            <label>Tabt årsag
+                <select name="tabt_aarsag">
+                    <option value="">– vælg –</option>
+                    <?php foreach (TABT_AARSAG_LISTE as $s): ?>
+                        <option value="<?= e($s) ?>" <?= $projekt['tabt_aarsag'] === $s ? 'selected' : '' ?>><?= e($s) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>Uddybning ved "Andet"
+                <input type="text" name="tabt_aarsag_note" maxlength="500" value="<?= e($projekt['tabt_aarsag_note']) ?>">
+            </label>
+        </div>
+    </fieldset>
+
+    <fieldset>
+        <legend>Øvrige oplysninger</legend>
+        <label>Antal plan
+            <input type="number" step="1" min="0" name="antal_plan" value="<?= e((string)$projekt['antal_plan']) ?>">
+        </label>
+        <label>Kælder
+            <select name="kaelder">
+                <option value="">– ukendt –</option>
+                <option value="Ja" <?= $projekt['kaelder'] === 'Ja' ? 'selected' : '' ?>>Ja</option>
+                <option value="Nej" <?= $projekt['kaelder'] === 'Nej' ? 'selected' : '' ?>>Nej</option>
+            </select>
+        </label>
+        <label>Antal boliger
+            <input type="number" step="1" min="0" name="antal_boliger" value="<?= e((string)$projekt['antal_boliger']) ?>">
+        </label>
+        <label>Eksternt link
+            <input type="url" name="ekstern_link" value="<?= e($projekt['ekstern_link']) ?>">
+        </label>
+        <label>Bemærkninger
+            <textarea name="noter" rows="4"><?= e($projekt['noter']) ?></textarea>
+        </label>
+    </fieldset>
+
+    <fieldset>
+        <legend>BMS-ansvarlige</legend>
+        <p class="mindre">Vælg de(n) interne, der er ansvarlige for projektet, og markér højst én som primær.</p>
+        <table class="data-tabel data-tabel-kompakt">
+            <thead><tr><th>Tilknyt</th><th>Navn</th><th>Primær</th></tr></thead>
             <tbody>
-                <?php foreach ($tilknyttedeUe as $ueId => $sum):
-                    $ue = null;
-                    foreach ($alleUe as $kandidat) {
-                        if ((int)$kandidat['id'] === (int)$ueId) {
-                            $ue = $kandidat;
-                            break;
-                        }
-                    }
-                    if (!$ue) {
-                        continue;
-                    }
-                ?>
+                <?php foreach ($alleBrugere as $b): ?>
                 <tr>
-                    <td>
-                        <?= e($ue['navn']) ?>
-                        <input type="hidden" name="ue_id[]" value="<?= (int)$ueId ?>">
-                    </td>
-                    <td><input type="number" step="0.01" name="ue_sum[]" value="<?= e((string)$sum) ?>"></td>
-                    <td><button type="button" class="fjern-ue link-knap">Fjern</button></td>
+                    <td><input type="checkbox" name="ansvarlig_id[]" value="<?= (int)$b['id'] ?>" <?= isset($tilknyttedeAnsvarlige[$b['id']]) ? 'checked' : '' ?>></td>
+                    <td><?= e($b['navn']) ?> (<?= e($b['initialer']) ?>)</td>
+                    <td><input type="radio" name="primaer_ansvarlig_id" value="<?= (int)$b['id'] ?>" <?= (($tilknyttedeAnsvarlige[$b['id']] ?? false) === true) ? 'checked' : '' ?>></td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
-        <label>Tilføj underentreprenør
-            <select id="ue-vaelg">
+    </fieldset>
+
+    <fieldset>
+        <legend>Virksomheder</legend>
+        <table id="virksomhed-tabel">
+            <thead><tr><th>Virksomhed</th><th>Rolle</th><th>Fagområde</th><th>Aftalt sum (kr.)</th><th></th></tr></thead>
+            <tbody>
+                <?php foreach ($tilknyttedeVirksomheder as $i => $tv): ?>
+                <tr>
+                    <td>
+                        <?= e($tv['navn']) ?>
+                        <input type="hidden" name="virksomhed_id[]" value="<?= (int)$tv['virksomhed_id'] ?>">
+                    </td>
+                    <td>
+                        <select name="virksomhed_rolle[]">
+                            <?php foreach (VIRKSOMHED_ROLLE_LISTE as $r): ?>
+                                <option value="<?= e($r) ?>" <?= $tv['rolle'] === $r ? 'selected' : '' ?>><?= e($r) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </td>
+                    <td><input type="text" name="virksomhed_fag[]" value="<?= e($tv['fagomraade']) ?>"></td>
+                    <td><input type="number" step="0.01" name="virksomhed_sum[]" value="<?= e((string)$tv['aftalt_sum']) ?>"></td>
+                    <td><button type="button" class="fjern-raekke link-knap">Fjern</button></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <label>Tilføj virksomhed
+            <select id="virksomhed-vaelg">
                 <option value="">– vælg –</option>
-                <?php foreach ($alleUe as $ue): ?>
-                    <option value="<?= (int)$ue['id'] ?>" data-navn="<?= e($ue['navn']) ?>">
-                        <?= e($ue['navn']) ?><?= $ue['fag'] ? ' (' . e($ue['fag']) . ')' : '' ?>
-                    </option>
+                <?php foreach ($alleVirksomheder as $v): ?>
+                    <option value="<?= (int)$v['id'] ?>" data-navn="<?= e($v['navn']) ?>"><?= e($v['navn']) ?></option>
                 <?php endforeach; ?>
             </select>
-            <button type="button" id="tilfoej-ue">Tilføj</button>
+            <button type="button" id="tilfoej-virksomhed">Tilføj</button>
         </label>
+        <p class="mindre">Mangler virksomheden på listen? <a href="virksomhed-form.php" target="_blank" rel="noopener">Opret den her</a> og genindlæs siden.</p>
+    </fieldset>
+
+    <fieldset>
+        <legend>Kontaktpersoner</legend>
+        <table id="kontakt-tabel">
+            <thead><tr><th>Navn</th><th>Stilling</th><th>Telefon</th><th>E-mail</th><th>Primær</th><th></th></tr></thead>
+            <tbody>
+                <?php foreach ($tilknyttedeKontakter as $i => $k): ?>
+                <tr>
+                    <td><input type="text" name="kontakt_navn[]" value="<?= e($k['navn']) ?>"></td>
+                    <td><input type="text" name="kontakt_stilling[]" value="<?= e($k['stilling']) ?>"></td>
+                    <td><input type="text" name="kontakt_telefon[]" value="<?= e($k['telefon']) ?>"></td>
+                    <td><input type="email" name="kontakt_email[]" value="<?= e($k['email']) ?>"></td>
+                    <td><input type="radio" name="primaer_kontakt_index" value="<?= (int)$i ?>" <?= $k['primaer'] ? 'checked' : '' ?>></td>
+                    <td><button type="button" class="fjern-raekke link-knap">Fjern</button></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <button type="button" id="tilfoej-kontakt">+ Tilføj kontaktperson</button>
     </fieldset>
 
     <button type="submit">Gem</button>
-    <a href="index.php">Annullér</a>
+    <a href="<?= $id ? 'projekt-detalje.php?id=' . (int)$id : 'index.php' ?>">Annullér</a>
 </form>
 <script src="assets/app.js"></script>
 <?php require __DIR__ . '/inc/footer.php'; ?>

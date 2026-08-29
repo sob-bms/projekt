@@ -109,3 +109,94 @@ form fieldset table th, form fieldset table td { padding: 6px 4px; text-align: l
 .chart-boks h2 { font-size: 1rem; margin: 0 0 12px; }
 
 .fod { color: #9ca3af; font-size: 0.85rem; padding: 20px 0; }
+
+/* Login */
+.login-boks { max-width: 360px; margin: 40px auto; }
+.login-boks h1 { text-align: center; }
+.fejlbesked { background: #fef2f2; color: var(--roed); border: 1px solid #fecaca; border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; }
+
+/* Bruger-info i topbar */
+.bruger-info { display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 0.9rem; margin: 0; }
+.link-knap-lys { color: #cbd5e1; text-decoration: underline; }
+.link-knap-lys:hover { color: #fff; }
+
+/* Udvidet filterbar med grupperede felter */
+.filterbar-udvidet { align-items: flex-start; }
+.filterbar-udvidet .soegefelt { min-width: 260px; }
+.filter-gruppe {
+    border: 1px solid var(--graa-kant);
+    border-radius: 6px;
+    padding: 6px 10px 8px;
+    margin: 0;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.filter-gruppe legend { font-size: 0.75rem; color: var(--graa-tekst); padding: 0 4px; }
+.filter-gruppe label.inline, .filterbar label.inline {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: normal;
+    font-size: 0.9rem;
+    margin: 0;
+    white-space: nowrap;
+}
+.filter-gruppe input[type="month"], .filter-gruppe select { padding: 6px 8px; }
+.ansvarlig-multi { min-width: 160px; }
+.nulstil-knap { align-self: center; color: var(--graa-tekst); text-decoration: underline; }
+.resultat-tal { color: var(--graa-tekst); font-size: 0.9rem; margin: -6px 0 12px; }
+
+/* Tabeller skal kunne scrolle vandret på smalle skærme (tablet) i stedet
+   for at klemme sidens layout. */
+.tabel-scroll { overflow-x: auto; }
+.data-tabel-kompakt th, .data-tabel-kompakt td { padding: 4px 8px; }
+
+.badge-aaben { background: var(--blaa); }
+.badge-lukket { background: #6b7280; }
+.badge-annulleret { background: var(--roed); }
+.badge-vundet { background: var(--groen); }
+.badge-dialog { background: var(--gul); }
+.badge-primaer { background: var(--blaa); font-size: 0.7rem; padding: 2px 8px; }
+.badge-bekraeftet { background: var(--groen); }
+
+.ikke-tildelt { color: #9ca3af; font-style: italic; }
+.medansvarlige { color: var(--graa-tekst); font-size: 0.8rem; }
+
+.paginering { display: flex; gap: 16px; align-items: center; justify-content: center; margin: 24px 0; color: var(--graa-tekst); }
+.paginering a { color: var(--blaa); text-decoration: none; }
+
+.brodkrumme { margin: 0 0 4px; }
+.brodkrumme a { color: var(--graa-tekst); text-decoration: none; font-size: 0.9rem; }
+
+.badge-raekke { display: flex; gap: 8px; margin-bottom: 20px; }
+
+.detalje-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 24px; }
+.detalje-boks { background: var(--graa-lys); border-radius: 10px; padding: 20px 24px; margin-bottom: 24px; }
+.detalje-boks h2 { font-size: 1.1rem; margin: 0 0 12px; }
+.detalje-boks h3 { font-size: 0.95rem; margin: 16px 0 6px; }
+
+.dl-tabel { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0; }
+.dl-tabel dt { color: var(--graa-tekst); font-size: 0.85rem; }
+.dl-tabel dd { margin: 0; }
+
+.forudformateret { white-space: pre-line; }
+.ren-liste { list-style: none; margin: 0; padding: 0; }
+.ren-liste li { padding: 8px 0; border-bottom: 1px solid var(--graa-kant); }
+.ren-liste li:last-child { border-bottom: none; }
+.mindre { color: var(--graa-tekst); font-size: 0.85rem; }
+
+.note-formular { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 16px; }
+.note-formular textarea { flex: 1; max-width: none; }
+.note-formular button { white-space: nowrap; }
+.note-liste { list-style: none; margin: 0; padding: 0; }
+.note-liste li { padding: 10px 0; border-bottom: 1px solid var(--graa-kant); }
+.note-liste li p { margin: 0 0 4px; white-space: pre-line; }
+
+@media (max-width: 900px) {
+    .side-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .detalje-grid { grid-template-columns: 1fr; }
+    .noegletal { gap: 12px; }
+    .kort { min-width: 140px; padding: 14px 18px; }
+}

@@ -1,3 +1,8 @@
 inc/config.php
+.env
 *.log
 .DS_Store
+/vendor/
+/.phpunit.cache/
+/data/import/*.xlsx
+!/data/import/.gitkeep

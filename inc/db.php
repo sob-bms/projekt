@@ -1,19 +1,19 @@
 <?php
+
 declare(strict_types=1);
 
-$configFile = __DIR__ . '/config.php';
-if (!file_exists($configFile)) {
-    http_response_code(500);
-    die('Mangler inc/config.php – kopiér inc/config.eksempel.php til inc/config.php og udfyld databaseoplysninger.');
-}
+require_once __DIR__ . '/env.php';
 
-$config = require $configFile;
+$dbHost = env('DB_HOST', 'localhost');
+$dbName = env('DB_NAME', 'bms_projekt');
+$dbUser = env('DB_USER', 'bms_projekt');
+$dbPass = env('DB_PASS', '');
 
 try {
     $pdo = new PDO(
-        "mysql:host={$config['db_host']};dbname={$config['db_name']};charset=utf8mb4",
-        $config['db_user'],
-        $config['db_pass'],
+        "mysql:host={$dbHost};dbname={$dbName};charset=utf8mb4",
+        $dbUser,
+        $dbPass,
         [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -22,5 +22,5 @@ try {
     );
 } catch (PDOException $e) {
     http_response_code(500);
-    die('Databaseforbindelse fejlede. Tjek inc/config.php.');
+    die('Databaseforbindelse fejlede. Tjek .env (DB_HOST/DB_NAME/DB_USER/DB_PASS).');
 }
