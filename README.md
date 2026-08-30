@@ -181,8 +181,13 @@ for at teste Excel-importen uden at bruge/committe rigtige kundedata.
   skal ligge under en understi på et eksisterende site) på projektmappen.
 - Sæt `.env` (eller rigtige miljøvariabler) med produktionens
   databaseoplysninger – aldrig i git.
-- Kør `php bin/migrer.php` efter hver opdatering, der indeholder nye filer i
-  `db/migrations/`.
+- Opdatér til seneste version på serveren med `sh opdater.sh` (kræver rent
+  arbejdstræ - scriptet stopper med en advarsel, hvis nogen har rettet
+  direkte på serveren, og kører `php bin/migrer.php` automatisk til sidst).
+  `.htaccess` har typisk en lokal Basic Auth-tilføjelse på serveren, som
+  scriptet lader stå urørt via git "skip-worktree".
+- Kører du ikke `opdater.sh`, så husk selv `php bin/migrer.php` efter hver
+  opdatering, der indeholder nye filer i `db/migrations/`.
 - `Chart.js` hentes fra et CDN i `dashboard.php`. Blokerer intranettet
   udgående adgang til CDN'er, downloades `chart.umd.min.js` fra Chart.js'
   GitHub-releases i stedet, lægges i `assets/`, og `<script src="...">` i
