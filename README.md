@@ -216,7 +216,8 @@ Gendannelse ved behov: `mysql -u bms_projekt -p bms_projekt < backup-foer-import
 
 ## Struktur
 
-- `index.php` – projektoversigt (søgning, filtre, sortering, paginering)
+- `index.php` – projektoversigt (søgning, filtre, sortering, paginering,
+  vis/skjul kolonner)
 - `projekt-detalje.php` – fuld projektvisning (virksomheder, kontakter,
   ansvarlige, noter, historik)
 - `projekt-form.php` / `projekt-gem.php` / `projekt-slet.php` – opret,
@@ -226,6 +227,9 @@ Gendannelse ved behov: `mysql -u bms_projekt -p bms_projekt < backup-foer-import
 - `brugere.php` m.fl. – administration af interne brugere/BMS-ansvarlige
   (kun administrator)
 - `dashboard.php` – nøgletal og søjlediagrammer, filtreret som oversigten
+- `inc/filterbar.php` – delt filterbar for projektoversigt og dashboard;
+  `filter-gem.php` gemmer/glemmer et filter pr. bruger og side (tabellen
+  `gemte_filtre`), så det anvendes automatisk ved næste besøg
 - `import.php` / `bin/importer.php` – Excel-import (web hhv. kommandolinje)
 - `login.php` / `logout.php` – simpelt sessionsbaseret login
 - `db/migrations/` – databaseskema, kørt via `bin/migrer.php`

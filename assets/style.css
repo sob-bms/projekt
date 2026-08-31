@@ -43,15 +43,15 @@ h1 { font-size: 1.6rem; margin: 0 0 20px; }
 }
 .knap:hover { background: var(--blaa-moerk); }
 
-.filterbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+.filterbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
 .filterbar input, .filterbar select {
-    padding: 8px 10px;
+    padding: 6px 8px;
     border: 1px solid var(--graa-kant);
     border-radius: 6px;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
 }
 .filterbar button {
-    padding: 8px 16px;
+    padding: 7px 14px;
     border: none;
     border-radius: 6px;
     background: var(--blaa);
@@ -120,37 +120,110 @@ form fieldset table th, form fieldset table td { padding: 6px 4px; text-align: l
 .link-knap-lys { color: #cbd5e1; text-decoration: underline; }
 .link-knap-lys:hover { color: #fff; }
 
-/* Udvidet filterbar med grupperede felter */
-.filterbar-udvidet { align-items: flex-start; }
-.filterbar-udvidet .soegefelt { min-width: 260px; }
+/* Kompakt filterbar med grupperede felter. 1. prioritet (søgning,
+   byggestart, BMS-ansvarlig) står altid fremme; 2. prioritet (leadkilde, by,
+   status) ligger samlet i .filter-flere for at spare plads. */
+.filterbar-kompakt { align-items: flex-start; }
+.filterbar-kompakt .soegefelt { min-width: 240px; }
 .filter-gruppe {
     border: 1px solid var(--graa-kant);
     border-radius: 6px;
-    padding: 6px 10px 8px;
+    padding: 4px 8px 6px;
     margin: 0;
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
     flex-wrap: wrap;
 }
-.filter-gruppe legend { font-size: 0.75rem; color: var(--graa-tekst); padding: 0 4px; }
+.filter-gruppe legend { font-size: 0.72rem; color: var(--graa-tekst); padding: 0 4px; }
 .filter-gruppe label.inline, .filterbar label.inline {
     display: flex;
     align-items: center;
     gap: 4px;
     font-weight: normal;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     margin: 0;
     white-space: nowrap;
 }
-.filter-gruppe input[type="month"], .filter-gruppe select { padding: 6px 8px; }
-.ansvarlig-multi { min-width: 160px; }
-.nulstil-knap { align-self: center; color: var(--graa-tekst); text-decoration: underline; }
-.resultat-tal { color: var(--graa-tekst); font-size: 0.9rem; margin: -6px 0 12px; }
+.filter-gruppe input[type="month"], .filter-gruppe select { padding: 5px 6px; }
+.ansvarlig-multi { min-width: 150px; }
+.nulstil-knap { align-self: center; color: var(--graa-tekst); text-decoration: underline; font-size: 0.9rem; }
+.resultat-tal { color: var(--graa-tekst); font-size: 0.9rem; margin: 0; }
+
+/* 2. prioritets filtre (leadkilde, by, status), sammenfoldet som standard. */
+.filter-flere {
+    border: 1px dashed var(--graa-kant);
+    border-radius: 6px;
+    padding: 4px 8px;
+    align-self: flex-start;
+}
+.filter-flere summary {
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--blaa);
+    font-weight: 600;
+    list-style: none;
+}
+.filter-flere summary::-webkit-details-marker { display: none; }
+.filter-flere summary::before { content: '▸ '; }
+.filter-flere[open] summary::before { content: '▾ '; }
+.filter-flere-indhold { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+
+/* Egen, fuldbredde række til "Flere filtre" + handlingsknapper, så de altid
+   ligger samlet under filtergrupperne i stedet for at flyde tilfældigt op
+   ved siden af dem afhængig af hvor meget plads flexbox-ombrydningen giver. */
+.filterbar-bund { flex-basis: 100%; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.filterbar-knapper { display: flex; gap: 10px; align-items: center; }
+
+/* Gem/glem filter for den aktuelle bruger. */
+.gem-filter-raekke { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin: -2px 0 16px; }
+.gem-filter-form, .glem-filter-form { display: flex; gap: 8px; align-items: center; margin: 0; }
+.gem-filter-form .link-knap, .glem-filter-form .link-knap { font-size: 0.85rem; }
+
+/* Værktøjslinje lige over projektlisten: resultattal + kolonnevælger. */
+.tabel-vaerktoejer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.ingen-resultater { color: var(--graa-tekst); margin: 0 0 12px; }
+
+.kolonne-vaelger { position: relative; }
+.kolonne-vaelger-knap {
+    padding: 6px 12px;
+    border: 1px solid var(--graa-kant);
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+.kolonne-vaelger-knap:hover { background: var(--graa-lys); }
+.kolonne-vaelger-panel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    background: #fff;
+    border: 1px solid var(--graa-kant);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 10px 14px;
+    z-index: 10;
+    min-width: 200px;
+}
+.kolonne-vaelger-panel label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: normal;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+    white-space: nowrap;
+}
+.kolonne-vaelger-panel label:last-child { margin-bottom: 0; }
 
 /* Tabeller skal kunne scrolle vandret på smalle skærme (tablet) i stedet
-   for at klemme sidens layout. */
+   for at klemme sidens layout. En tynd bjælke oven over tabellen (spejlet
+   via JS, se app.js) gør det muligt at scrolle vandret uden at skulle ned
+   til bunden af en lang liste først. */
 .tabel-scroll { overflow-x: auto; }
+.tabel-scroll-top { overflow-x: auto; overflow-y: hidden; height: 14px; margin-bottom: 2px; }
+.tabel-scroll-top > div { height: 1px; }
 .data-tabel-kompakt th, .data-tabel-kompakt td { padding: 4px 8px; }
 
 .badge-aaben { background: var(--blaa); }

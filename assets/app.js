@@ -2,7 +2,108 @@ document.addEventListener('DOMContentLoaded', function () {
     lavVirksomhedTabel();
     lavKontaktTabel();
     lavTabtAarsagToggle();
+    lavTabelTopScroll();
+    lavKolonneVisning();
 });
+
+/**
+ * Spejler tabellens vandrette scroll i en tynd bjælke oven over den, så man
+ * også kan scrolle en bred tabel fra toppen uden at skulle ned til bunden af
+ * siden først.
+ */
+function lavTabelTopScroll() {
+    const top = document.getElementById('tabel-scroll-top');
+    const bund = document.getElementById('tabel-scroll');
+    const tabel = document.getElementById('data-tabel');
+    if (!top || !bund || !tabel) return;
+
+    const indre = top.firstElementChild;
+
+    function opdaterBredde() {
+        indre.style.width = tabel.scrollWidth + 'px';
+    }
+    opdaterBredde();
+    window.addEventListener('resize', opdaterBredde);
+
+    let synkroniserer = false;
+    top.addEventListener('scroll', function () {
+        if (synkroniserer) return;
+        synkroniserer = true;
+        bund.scrollLeft = top.scrollLeft;
+        synkroniserer = false;
+    });
+    bund.addEventListener('scroll', function () {
+        if (synkroniserer) return;
+        synkroniserer = true;
+        top.scrollLeft = bund.scrollLeft;
+        synkroniserer = false;
+    });
+}
+
+/**
+ * Vis/skjul kolonner-panel for projektlisten. Hvilke kolonner der er skjult
+ * huskes pr. browser i localStorage, så valget består ved næste besøg.
+ */
+function lavKolonneVisning() {
+    const knap = document.getElementById('kolonne-vaelger-knap');
+    const panel = document.getElementById('kolonne-vaelger-panel');
+    if (!knap || !panel) return;
+
+    const LAGER_NOEGLE = 'bms-projekter-skjulte-kolonner';
+
+    function hentSkjulte() {
+        try {
+            const gemt = JSON.parse(localStorage.getItem(LAGER_NOEGLE) || '[]');
+            return Array.isArray(gemt) ? gemt : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function gemSkjulte(liste) {
+        try {
+            localStorage.setItem(LAGER_NOEGLE, JSON.stringify(liste));
+        } catch (e) {
+            // localStorage utilgængelig (privat vinduesbrowsing e.l.) - ignorér.
+        }
+    }
+
+    function visKolonne(kolonne, vis) {
+        document.querySelectorAll('[data-kolonne="' + kolonne + '"]').forEach(function (celle) {
+            celle.hidden = !vis;
+        });
+    }
+
+    const skjulte = hentSkjulte();
+    panel.querySelectorAll('input[data-kolonne-toggle]').forEach(function (checkbox) {
+        const kolonne = checkbox.dataset.kolonneToggle;
+        const erSkjult = skjulte.includes(kolonne);
+        checkbox.checked = !erSkjult;
+        visKolonne(kolonne, !erSkjult);
+
+        checkbox.addEventListener('change', function () {
+            const nu = hentSkjulte().filter(function (k) { return k !== kolonne; });
+            if (!checkbox.checked) nu.push(kolonne);
+            gemSkjulte(nu);
+            visKolonne(kolonne, checkbox.checked);
+            window.dispatchEvent(new Event('resize'));
+        });
+    });
+
+    knap.addEventListener('click', function (event) {
+        event.stopPropagation();
+        const aabnes = panel.hidden;
+        panel.hidden = !aabnes;
+        knap.setAttribute('aria-expanded', String(aabnes));
+    });
+
+    document.addEventListener('click', function (event) {
+        if (!panel.hidden && !panel.contains(event.target) && event.target !== knap) {
+            panel.hidden = true;
+            knap.setAttribute('aria-expanded', 'false');
+        }
+    });
+}
 
 function lavVirksomhedTabel() {
     const tilfoejKnap = document.getElementById('tilfoej-virksomhed');

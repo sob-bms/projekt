@@ -2,6 +2,15 @@
 require __DIR__ . '/inc/bootstrap.php';
 $bruger = kraev_login();
 
+$filterSide = 'dashboard';
+$gemtFilter = hent_gemt_filter($pdo, (int)$bruger['id'], $filterSide);
+if (empty($_GET) && $gemtFilter !== null) {
+    $qs = http_build_query(projekt_filter_ikke_tomme($gemtFilter));
+    header('Location: dashboard.php' . ($qs !== '' ? '?' . $qs : ''));
+    exit;
+}
+$harGemtFilter = $gemtFilter !== null;
+
 $filter = projekt_filter_fra_get($_GET);
 
 // KPI'er og alle diagrammer bruger samme filtrerede grundlag som
@@ -19,67 +28,13 @@ $andel = fn (int $del) => $totalAntal > 0 ? round($del / $totalAntal * 100) : 0;
 $brugerListe = hent_brugere_liste($pdo);
 $leadListe = $pdo->query("SELECT DISTINCT lead FROM projekter WHERE lead IS NOT NULL AND lead <> '' ORDER BY lead")->fetchAll(PDO::FETCH_COLUMN);
 $byListe = $pdo->query("SELECT DISTINCT by_navn FROM projekter WHERE by_navn IS NOT NULL AND by_navn <> '' ORDER BY by_navn")->fetchAll(PDO::FETCH_COLUMN);
-$harFiltre = array_filter($filter, fn ($v) => $v !== '' && $v !== [] && $v !== false);
+$harFiltre = projekt_filter_ikke_tomme($filter);
 
 $jsonFlag = JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP;
 
 require __DIR__ . '/inc/header.php';
 ?>
 <h1>Dashboard</h1>
-
-<form method="get" class="filterbar filterbar-udvidet">
-    <input type="text" name="soeg" placeholder="Søg på navn, adresse, by, virksomhed, kontakt, notat" value="<?= e($filter['soeg']) ?>" class="soegefelt">
-    <fieldset class="filter-gruppe">
-        <legend>Byggestart</legend>
-        <label class="inline">Fra <input type="month" name="byggestart_fra" value="<?= e($filter['byggestart_fra']) ?>"></label>
-        <label class="inline">Til <input type="month" name="byggestart_til" value="<?= e($filter['byggestart_til']) ?>"></label>
-        <select name="byggestart_status">
-            <option value="">Alle</option>
-            <option value="bekraeftet" <?= $filter['byggestart_status'] === 'bekraeftet' ? 'selected' : '' ?>>Bekræftet</option>
-            <option value="ikke_bekraeftet" <?= $filter['byggestart_status'] === 'ikke_bekraeftet' ? 'selected' : '' ?>>Ikke bekræftet</option>
-            <option value="ukendt" <?= $filter['byggestart_status'] === 'ukendt' ? 'selected' : '' ?>>Ukendt dato</option>
-        </select>
-    </fieldset>
-    <fieldset class="filter-gruppe">
-        <legend>BMS-ansvarlig</legend>
-        <select name="ansvarlig[]" multiple size="3" class="ansvarlig-multi">
-            <?php foreach ($brugerListe as $b): ?>
-                <option value="<?= (int)$b['id'] ?>" <?= in_array((int)$b['id'], $filter['ansvarlig'], true) ? 'selected' : '' ?>><?= e($b['navn']) ?></option>
-            <?php endforeach; ?>
-        </select>
-        <label class="inline"><input type="checkbox" name="kun_primaer" value="1" <?= $filter['kun_primaer'] ? 'checked' : '' ?>> Kun som primær</label>
-        <select name="ansvarlig_tildeling">
-            <option value="">Alle</option>
-            <option value="tildelt" <?= $filter['ansvarlig_tildeling'] === 'tildelt' ? 'selected' : '' ?>>Tildelt</option>
-            <option value="ikke_tildelt" <?= $filter['ansvarlig_tildeling'] === 'ikke_tildelt' ? 'selected' : '' ?>>Ikke tildelt</option>
-        </select>
-    </fieldset>
-    <fieldset class="filter-gruppe">
-        <legend>Status</legend>
-        <select name="aabenlukket">
-            <option value="">Åben/lukket - alle</option>
-            <?php foreach (AABENLUKKET_LISTE as $s): ?>
-                <option value="<?= e($s) ?>" <?= $filter['aabenlukket'] === $s ? 'selected' : '' ?>><?= e($s) ?></option>
-            <?php endforeach; ?>
-        </select>
-        <select name="salgsresultat">
-            <option value="">Salgsresultat - alle</option>
-            <?php foreach (SALGSRESULTAT_LISTE as $s): ?>
-                <option value="<?= e($s) ?>" <?= $filter['salgsresultat'] === $s ? 'selected' : '' ?>><?= e($s) ?></option>
-            <?php endforeach; ?>
-        </select>
-    </fieldset>
-    <select name="lead">
-        <option value="">Leadkilde - alle</option>
-        <?php foreach ($leadListe as $l): ?><option value="<?= e($l) ?>" <?= $filter['lead'] === $l ? 'selected' : '' ?>><?= e($l) ?></option><?php endforeach; ?>
-    </select>
-    <select name="by">
-        <option value="">By - alle</option>
-        <?php foreach ($byListe as $b): ?><option value="<?= e($b) ?>" <?= $filter['by'] === $b ? 'selected' : '' ?>><?= e($b) ?></option><?php endforeach; ?>
-    </select>
-    <button type="submit">Filtrér</button>
-    <?php if ($harFiltre): ?><a href="dashboard.php" class="nulstil-knap">Nulstil alle filtre</a><?php endif; ?>
-</form>
 
 <div class="noegletal">
     <div class="kort"><span class="tal"><?= $totalAntal ?></span><span class="label">Projekter i alt</span></div>
@@ -114,6 +69,8 @@ require __DIR__ . '/inc/header.php';
         <canvas id="chartAnsvarligSum"></canvas>
     </div>
 </div>
+
+<?php require __DIR__ . '/inc/filterbar.php'; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script>

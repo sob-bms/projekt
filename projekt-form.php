@@ -211,5 +211,4 @@ require __DIR__ . '/inc/header.php';
     <button type="submit">Gem</button>
     <a href="<?= $id ? 'projekt-detalje.php?id=' . (int)$id : 'index.php' ?>">Annullér</a>
 </form>
-<script src="assets/app.js"></script>
 <?php require __DIR__ . '/inc/footer.php'; ?>

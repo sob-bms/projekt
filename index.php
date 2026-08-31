@@ -2,6 +2,15 @@
 require __DIR__ . '/inc/bootstrap.php';
 $bruger = kraev_login();
 
+$filterSide = 'projekter';
+$gemtFilter = hent_gemt_filter($pdo, (int)$bruger['id'], $filterSide);
+if (empty($_GET) && $gemtFilter !== null) {
+    $qs = http_build_query(projekt_filter_ikke_tomme($gemtFilter));
+    header('Location: index.php' . ($qs !== '' ? '?' . $qs : ''));
+    exit;
+}
+$harGemtFilter = $gemtFilter !== null;
+
 $filter = projekt_filter_fra_get($_GET);
 $hvor = byg_projekt_where($filter);
 
@@ -56,7 +65,7 @@ $byListe = $pdo->query(
     "SELECT DISTINCT by_navn FROM projekter WHERE by_navn IS NOT NULL AND by_navn <> '' ORDER BY by_navn"
 )->fetchAll(PDO::FETCH_COLUMN);
 
-$harFiltre = array_filter($filter, fn ($v) => $v !== '' && $v !== [] && $v !== false);
+$harFiltre = projekt_filter_ikke_tomme($filter);
 
 require __DIR__ . '/inc/header.php';
 ?>
@@ -65,86 +74,45 @@ require __DIR__ . '/inc/header.php';
     <?php if (kan_redigere($bruger)): ?><a class="knap" href="projekt-form.php">+ Nyt projekt</a><?php endif; ?>
 </div>
 
-<form method="get" class="filterbar filterbar-udvidet">
-    <input type="text" name="soeg" placeholder="Søg på navn, adresse, by, virksomhed, kontakt, notat" value="<?= e($filter['soeg']) ?>" class="soegefelt">
+<?php require __DIR__ . '/inc/filterbar.php'; ?>
 
-    <fieldset class="filter-gruppe">
-        <legend>Byggestart</legend>
-        <label class="inline">Fra <input type="month" name="byggestart_fra" value="<?= e($filter['byggestart_fra']) ?>"></label>
-        <label class="inline">Til <input type="month" name="byggestart_til" value="<?= e($filter['byggestart_til']) ?>"></label>
-        <select name="byggestart_status">
-            <option value="">Alle</option>
-            <option value="bekraeftet" <?= $filter['byggestart_status'] === 'bekraeftet' ? 'selected' : '' ?>>Bekræftet</option>
-            <option value="ikke_bekraeftet" <?= $filter['byggestart_status'] === 'ikke_bekraeftet' ? 'selected' : '' ?>>Ikke bekræftet</option>
-            <option value="ukendt" <?= $filter['byggestart_status'] === 'ukendt' ? 'selected' : '' ?>>Ukendt dato</option>
-        </select>
-    </fieldset>
+<div class="tabel-vaerktoejer">
+    <p class="resultat-tal"><?= (int)$antalIalt ?> projekt(er) fundet.</p>
+    <div class="kolonne-vaelger">
+        <button type="button" class="kolonne-vaelger-knap" id="kolonne-vaelger-knap" aria-expanded="false" aria-controls="kolonne-vaelger-panel">Vis/skjul kolonner</button>
+        <div class="kolonne-vaelger-panel" id="kolonne-vaelger-panel" hidden>
+            <label><input type="checkbox" data-kolonne-toggle="projektsum"> Projektsum</label>
+            <label><input type="checkbox" data-kolonne-toggle="by"> Adresse / by</label>
+            <label><input type="checkbox" data-kolonne-toggle="byggestart"> Byggestart</label>
+            <label><input type="checkbox" data-kolonne-toggle="byggeslut"> Byggeslut</label>
+            <label><input type="checkbox" data-kolonne-toggle="hovedentreprenoer"> Hovedentr./kunde</label>
+            <label><input type="checkbox" data-kolonne-toggle="kontakt"> Primær kontakt</label>
+            <label><input type="checkbox" data-kolonne-toggle="ansvarlig"> BMS-ansvarlig</label>
+            <label><input type="checkbox" data-kolonne-toggle="status"> Status</label>
+            <label><input type="checkbox" data-kolonne-toggle="salg"> Salg</label>
+            <label><input type="checkbox" data-kolonne-toggle="opdateret"> Senest ændret</label>
+        </div>
+    </div>
+</div>
 
-    <fieldset class="filter-gruppe">
-        <legend>BMS-ansvarlig</legend>
-        <select name="ansvarlig[]" multiple size="3" class="ansvarlig-multi">
-            <?php foreach ($brugerListe as $b): ?>
-                <option value="<?= (int)$b['id'] ?>" <?= in_array((int)$b['id'], $filter['ansvarlig'], true) ? 'selected' : '' ?>><?= e($b['navn']) ?></option>
-            <?php endforeach; ?>
-        </select>
-        <label class="inline"><input type="checkbox" name="kun_primaer" value="1" <?= $filter['kun_primaer'] ? 'checked' : '' ?>> Kun som primær</label>
-        <select name="ansvarlig_tildeling">
-            <option value="">Alle</option>
-            <option value="tildelt" <?= $filter['ansvarlig_tildeling'] === 'tildelt' ? 'selected' : '' ?>>Tildelt</option>
-            <option value="ikke_tildelt" <?= $filter['ansvarlig_tildeling'] === 'ikke_tildelt' ? 'selected' : '' ?>>Ikke tildelt</option>
-        </select>
-    </fieldset>
+<?php if (!$projekter): ?><p class="ingen-resultater">Ingen projekter fundet.</p><?php endif; ?>
 
-    <fieldset class="filter-gruppe">
-        <legend>Status</legend>
-        <select name="aabenlukket">
-            <option value="">Åben/lukket - alle</option>
-            <?php foreach (AABENLUKKET_LISTE as $s): ?>
-                <option value="<?= e($s) ?>" <?= $filter['aabenlukket'] === $s ? 'selected' : '' ?>><?= e($s) ?></option>
-            <?php endforeach; ?>
-        </select>
-        <select name="salgsresultat">
-            <option value="">Salgsresultat - alle</option>
-            <?php foreach (SALGSRESULTAT_LISTE as $s): ?>
-                <option value="<?= e($s) ?>" <?= $filter['salgsresultat'] === $s ? 'selected' : '' ?>><?= e($s) ?></option>
-            <?php endforeach; ?>
-        </select>
-    </fieldset>
-
-    <select name="lead">
-        <option value="">Leadkilde - alle</option>
-        <?php foreach ($leadListe as $l): ?>
-            <option value="<?= e($l) ?>" <?= $filter['lead'] === $l ? 'selected' : '' ?>><?= e($l) ?></option>
-        <?php endforeach; ?>
-    </select>
-    <select name="by">
-        <option value="">By - alle</option>
-        <?php foreach ($byListe as $b): ?>
-            <option value="<?= e($b) ?>" <?= $filter['by'] === $b ? 'selected' : '' ?>><?= e($b) ?></option>
-        <?php endforeach; ?>
-    </select>
-
-    <button type="submit">Filtrér</button>
-    <?php if ($harFiltre): ?><a href="index.php" class="nulstil-knap">Nulstil alle filtre</a><?php endif; ?>
-</form>
-
-<p class="resultat-tal"><?= (int)$antalIalt ?> projekt(er) fundet.</p>
-
-<div class="tabel-scroll">
-<table class="data-tabel">
+<div class="tabel-scroll-top" id="tabel-scroll-top"><div></div></div>
+<div class="tabel-scroll" id="tabel-scroll">
+<table class="data-tabel" id="data-tabel">
     <thead>
         <tr>
             <th><?= sorteringsLink('navn', 'Navn') ?></th>
-            <th><?= sorteringsLink('projektsum', 'Projektsum') ?></th>
-            <th><?= sorteringsLink('by', 'Adresse / by') ?></th>
-            <th><?= sorteringsLink('byggestart', 'Byggestart') ?></th>
-            <th><?= sorteringsLink('byggeslut', 'Byggeslut') ?></th>
-            <th>Hovedentr./kunde</th>
-            <th>Primær kontakt</th>
-            <th>BMS-ansvarlig</th>
-            <th><?= sorteringsLink('aabenlukket', 'Status') ?></th>
-            <th><?= sorteringsLink('salgsresultat', 'Salg') ?></th>
-            <th><?= sorteringsLink('opdateret', 'Senest ændret') ?></th>
+            <th data-kolonne="projektsum"><?= sorteringsLink('projektsum', 'Projektsum') ?></th>
+            <th data-kolonne="by"><?= sorteringsLink('by', 'Adresse / by') ?></th>
+            <th data-kolonne="byggestart"><?= sorteringsLink('byggestart', 'Byggestart') ?></th>
+            <th data-kolonne="byggeslut"><?= sorteringsLink('byggeslut', 'Byggeslut') ?></th>
+            <th data-kolonne="hovedentreprenoer">Hovedentr./kunde</th>
+            <th data-kolonne="kontakt">Primær kontakt</th>
+            <th data-kolonne="ansvarlig">BMS-ansvarlig</th>
+            <th data-kolonne="status"><?= sorteringsLink('aabenlukket', 'Status') ?></th>
+            <th data-kolonne="salg"><?= sorteringsLink('salgsresultat', 'Salg') ?></th>
+            <th data-kolonne="opdateret"><?= sorteringsLink('opdateret', 'Senest ændret') ?></th>
             <th></th>
         </tr>
     </thead>
@@ -152,22 +120,22 @@ require __DIR__ . '/inc/header.php';
         <?php foreach ($projekter as $p): ?>
         <tr>
             <td><a href="projekt-detalje.php?id=<?= (int)$p['id'] ?>"><?= e($p['navn']) ?></a></td>
-            <td><?= e(formatKrMio($p['projektsum'])) ?></td>
-            <td><?= e(trim(($p['adresse'] ?? '') . ', ' . ($p['by_navn'] ?? ''), ', ')) ?: '–' ?></td>
-            <td>
+            <td data-kolonne="projektsum"><?= e(formatKrMio($p['projektsum'])) ?></td>
+            <td data-kolonne="by"><?= e(trim(($p['adresse'] ?? '') . ', ' . ($p['by_navn'] ?? ''), ', ')) ?: '–' ?></td>
+            <td data-kolonne="byggestart">
                 <?= e(formatMaaned($p['byggestart_maaned'])) ?>
                 <?php if ($p['byggestart_bekraeftet']): ?><span class="badge badge-bekraeftet" title="Byggestart bekræftet">✓</span><?php endif; ?>
             </td>
-            <td><?= e(formatMaaned($p['byggeslut_maaned'])) ?></td>
-            <td><?= e($p['hovedentreprenoer'] ?? '') ?: '–' ?></td>
-            <td><?= e($p['primaer_kontakt'] ?? '') ?: '–' ?></td>
-            <td>
+            <td data-kolonne="byggeslut"><?= e(formatMaaned($p['byggeslut_maaned'])) ?></td>
+            <td data-kolonne="hovedentreprenoer"><?= e($p['hovedentreprenoer'] ?? '') ?: '–' ?></td>
+            <td data-kolonne="kontakt"><?= e($p['primaer_kontakt'] ?? '') ?: '–' ?></td>
+            <td data-kolonne="ansvarlig">
                 <?= e($p['primaer_ansvarlig'] ?? '') ?: '<span class="ikke-tildelt">Ikke tildelt</span>' ?>
                 <?php if ($p['medansvarlige']): ?><div class="medansvarlige">+ <?= e($p['medansvarlige']) ?></div><?php endif; ?>
             </td>
-            <td><span class="badge badge-<?= aabenlukket_klasse($p['aabenlukket']) ?>"><?= e($p['aabenlukket']) ?></span></td>
-            <td><span class="badge badge-<?= salgsresultat_klasse($p['salgsresultat']) ?>"><?= e($p['salgsresultat']) ?></span></td>
-            <td><?= e(formatDatoTid($p['opdateret'])) ?></td>
+            <td data-kolonne="status"><span class="badge badge-<?= aabenlukket_klasse($p['aabenlukket']) ?>"><?= e($p['aabenlukket']) ?></span></td>
+            <td data-kolonne="salg"><span class="badge badge-<?= salgsresultat_klasse($p['salgsresultat']) ?>"><?= e($p['salgsresultat']) ?></span></td>
+            <td data-kolonne="opdateret"><?= e(formatDatoTid($p['opdateret'])) ?></td>
             <td class="handlinger">
                 <a href="projekt-detalje.php?id=<?= (int)$p['id'] ?>">Åbn</a>
                 <?php if (kan_redigere($bruger)): ?>
@@ -176,9 +144,6 @@ require __DIR__ . '/inc/header.php';
             </td>
         </tr>
         <?php endforeach; ?>
-        <?php if (!$projekter): ?>
-        <tr><td colspan="12">Ingen projekter fundet.</td></tr>
-        <?php endif; ?>
     </tbody>
 </table>
 </div>

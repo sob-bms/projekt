@@ -21,7 +21,7 @@ abstract class TestCase extends BaseTestCase
     private function nulstilTabeller(): void
     {
         $tabeller = [
-            'projekt_historik', 'projekt_noter', 'kontaktpersoner',
+            'gemte_filtre', 'projekt_historik', 'projekt_noter', 'kontaktpersoner',
             'projekt_virksomheder', 'projekt_ansvarlige',
             'projekter', 'virksomheder', 'brugere',
         ];

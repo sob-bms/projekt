@@ -351,6 +351,72 @@ function byg_projekt_where(array $filter): array
 }
 
 /**
+ * Fjerner tomme felter fra et normaliseret filter. Bruges dels til at
+ * afgøre om der overhovedet er aktive filtre (til "Nulstil alle filtre"),
+ * dels til at bygge querystrings og skjulte formularfelter ud fra et
+ * filter (se filter_til_skjulte_felter()).
+ */
+function projekt_filter_ikke_tomme(array $filter): array
+{
+    return array_filter($filter, fn ($v) => $v !== '' && $v !== [] && $v !== false);
+}
+
+/**
+ * Udfolder et sæt ikke-tomme filterværdier (fra projekt_filter_ikke_tomme())
+ * til en liste af [navn, værdi]-par klar til at blive skrevet som skjulte
+ * <input>-felter i en formular - bruges af "Gem disse filtre" i
+ * inc/filterbar.php, så det gemte filter er nøjagtig det der vises.
+ *
+ * @return list<array{0: string, 1: string}>
+ */
+function filter_til_skjulte_felter(array $ikkeTommeFilter): array
+{
+    $felter = [];
+    foreach ($ikkeTommeFilter as $noegle => $vaerdi) {
+        $navn = is_array($vaerdi) ? $noegle . '[]' : $noegle;
+        foreach ((is_array($vaerdi) ? $vaerdi : [$vaerdi]) as $enkeltVaerdi) {
+            $felter[] = [$navn, $enkeltVaerdi === true ? '1' : (string)$enkeltVaerdi];
+        }
+    }
+    return $felter;
+}
+
+/**
+ * Henter det gemte filter for brugeren på den givne side ('projekter'
+ * eller 'dashboard'), normaliseret som fra projekt_filter_fra_get().
+ * Returnerer null hvis brugeren ikke har gemt et filter for siden.
+ */
+function hent_gemt_filter(PDO $pdo, int $brugerId, string $side): ?array
+{
+    $stmt = $pdo->prepare('SELECT filter_json FROM gemte_filtre WHERE bruger_id = ? AND side = ?');
+    $stmt->execute([$brugerId, $side]);
+    $json = $stmt->fetchColumn();
+    if ($json === false) {
+        return null;
+    }
+    $data = json_decode($json, true);
+    return is_array($data) ? projekt_filter_fra_get($data) : null;
+}
+
+/**
+ * Gemmer (opretter eller overskriver) filteret for brugeren på den givne
+ * side.
+ */
+function gem_filter_for_bruger(PDO $pdo, int $brugerId, string $side, array $filter): void
+{
+    $stmt = $pdo->prepare(
+        'INSERT INTO gemte_filtre (bruger_id, side, filter_json) VALUES (?, ?, ?)
+         ON DUPLICATE KEY UPDATE filter_json = VALUES(filter_json)'
+    );
+    $stmt->execute([$brugerId, $side, json_encode($filter)]);
+}
+
+function slet_gemt_filter(PDO $pdo, int $brugerId, string $side): void
+{
+    $pdo->prepare('DELETE FROM gemte_filtre WHERE bruger_id = ? AND side = ?')->execute([$brugerId, $side]);
+}
+
+/**
  * Henter alle KPI- og diagramtal til dashboardet for et givent (allerede
  * normaliseret) filter. Udtrukket til egen funktion så den kan genbruges af
  * dashboard.php og testes uden en HTTP-request.
