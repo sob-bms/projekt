@@ -16,20 +16,13 @@
  * @var array $harFiltre     Ikke-tomme filterfelter, se projekt_filter_ikke_tomme()
  * @var string $filterSide   'projekter' eller 'dashboard'
  * @var bool $harGemtFilter  Har brugeren allerede gemt et filter for denne side
- * @var bool $soegefeltEksternt Udelad søgefeltet her - siden tegner det selv
- *                               et andet sted og kobler det til formularen
- *                               via form="filterform-<side>" (se index.php).
  */
 
 $filterAktionsside = $filterSide === 'dashboard' ? 'dashboard.php' : 'index.php';
 $flereFiltreAktive = $filter['aabenlukket'] !== '' || $filter['salgsresultat'] !== ''
     || $filter['lead'] !== '' || $filter['by'] !== '';
 ?>
-<form method="get" class="filterbar filterbar-kompakt" id="filterform-<?= e($filterSide) ?>">
-    <?php if (empty($soegefeltEksternt)): ?>
-    <input type="text" name="soeg" placeholder="Søg på navn, adresse, by, virksomhed, kontakt, notat" value="<?= e($filter['soeg']) ?>" class="soegefelt">
-    <?php endif; ?>
-
+<form method="get" class="filterbar filterbar-kompakt">
     <fieldset class="filter-gruppe">
         <legend>BMS-ansvarlig</legend>
         <select name="ansvarlig[]" multiple size="3" class="ansvarlig-multi">
@@ -56,6 +49,8 @@ $flereFiltreAktive = $filter['aabenlukket'] !== '' || $filter['salgsresultat'] !
             <option value="ukendt" <?= $filter['byggestart_status'] === 'ukendt' ? 'selected' : '' ?>>Ukendt dato</option>
         </select>
     </fieldset>
+
+    <input type="text" name="soeg" placeholder="Søg på navn, adresse, by, virksomhed, kontakt, notat" value="<?= e($filter['soeg']) ?>" class="soegefelt soegefelt-bund">
 
     <div class="filterbar-bund">
         <details class="filter-flere" <?= $flereFiltreAktive ? 'open' : '' ?>>

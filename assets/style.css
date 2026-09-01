@@ -133,9 +133,6 @@ form fieldset table th, form fieldset table td { padding: 6px 4px; text-align: l
    byggestart, BMS-ansvarlig) står altid fremme; 2. prioritet (leadkilde, by,
    status) ligger samlet i .filter-flere for at spare plads. */
 .filterbar-kompakt { align-items: flex-start; }
-/* Selvstændig styling (ikke afhængig af .filterbar) - søgefeltet står i
-   projektlistens værktøjslinje uden for selve filterformularen (koblet på
-   via form="filterform-projekter"), men stadig inde i den på dashboardet. */
 .soegefelt {
     padding: 6px 8px;
     border: 1px solid var(--graa-kant);
@@ -143,6 +140,9 @@ form fieldset table th, form fieldset table td { padding: 6px 4px; text-align: l
     font-size: 0.9rem;
     min-width: 240px;
 }
+/* Søgefeltet står under filtergrupperne (BMS-ansvarlig, Byggestart) som sin
+   egen fuldbredde række, ligesom .filterbar-bund. */
+.soegefelt-bund { flex-basis: 100%; }
 .filter-gruppe {
     border: 1px solid var(--graa-kant);
     border-radius: 6px;

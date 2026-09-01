@@ -69,7 +69,6 @@ $byListe = $pdo->query(
 )->fetchAll(PDO::FETCH_COLUMN);
 
 $harFiltre = projekt_filter_ikke_tomme($filter);
-$soegefeltEksternt = true;
 
 require __DIR__ . '/inc/header.php';
 ?>
@@ -84,7 +83,6 @@ require __DIR__ . '/inc/header.php';
     <div class="tabel-vaerktoejer-venstre">
         <p class="resultat-tal"><?= (int)$antalIalt ?> fundet.</p>
         <?php if (!$projekter): ?><p class="ingen-resultater">Ingen projekter fundet.</p><?php endif; ?>
-        <input type="text" name="soeg" form="filterform-projekter" placeholder="Søg på navn, adresse, by, virksomhed, kontakt, notat" value="<?= e($filter['soeg']) ?>" class="soegefelt">
     </div>
     <div class="kolonne-vaelger">
         <button type="button" class="kolonne-vaelger-knap" id="kolonne-vaelger-knap" aria-expanded="false" aria-controls="kolonne-vaelger-panel">Vis/skjul kolonner</button>
