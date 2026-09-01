@@ -50,6 +50,15 @@ h1 { font-size: 1.6rem; margin: 0 0 20px; }
     border-radius: 6px;
     font-size: 0.9rem;
 }
+/* Tilsidesætter width:100%/max-width:480px fra de almindelige
+   formularregler (beregnet til hele redigeringssider) i den kompakte
+   filterbar - felterne skal kun fylde hvad deres eget indhold kræver, så
+   flere filtergrupper (fx BMS-ansvarlig og Byggestart) kan stå ved siden
+   af hinanden i stedet for at blive strukket ud. */
+.filterbar-kompakt input, .filterbar-kompakt select {
+    width: auto;
+    max-width: none;
+}
 .filterbar button {
     padding: 7px 14px;
     border: none;
@@ -124,7 +133,16 @@ form fieldset table th, form fieldset table td { padding: 6px 4px; text-align: l
    byggestart, BMS-ansvarlig) står altid fremme; 2. prioritet (leadkilde, by,
    status) ligger samlet i .filter-flere for at spare plads. */
 .filterbar-kompakt { align-items: flex-start; }
-.filterbar-kompakt .soegefelt { min-width: 240px; }
+/* Selvstændig styling (ikke afhængig af .filterbar) - søgefeltet står i
+   projektlistens værktøjslinje uden for selve filterformularen (koblet på
+   via form="filterform-projekter"), men stadig inde i den på dashboardet. */
+.soegefelt {
+    padding: 6px 8px;
+    border: 1px solid var(--graa-kant);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    min-width: 240px;
+}
 .filter-gruppe {
     border: 1px solid var(--graa-kant);
     border-radius: 6px;

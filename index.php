@@ -23,6 +23,9 @@ $sortKolonner = [
     'aabenlukket' => 'p.aabenlukket',
     'salgsresultat' => 'p.salgsresultat',
     'opdateret' => 'p.opdateret',
+    'hovedentreprenoer' => 'hovedentreprenoer',
+    'kontakt' => 'primaer_kontakt',
+    'ansvarlig' => 'primaer_ansvarlig',
 ];
 $sort = $_GET['sort'] ?? 'opdateret';
 if (!isset($sortKolonner[$sort])) {
@@ -66,6 +69,7 @@ $byListe = $pdo->query(
 )->fetchAll(PDO::FETCH_COLUMN);
 
 $harFiltre = projekt_filter_ikke_tomme($filter);
+$soegefeltEksternt = true;
 
 require __DIR__ . '/inc/header.php';
 ?>
@@ -80,6 +84,7 @@ require __DIR__ . '/inc/header.php';
     <div class="tabel-vaerktoejer-venstre">
         <p class="resultat-tal"><?= (int)$antalIalt ?> fundet.</p>
         <?php if (!$projekter): ?><p class="ingen-resultater">Ingen projekter fundet.</p><?php endif; ?>
+        <input type="text" name="soeg" form="filterform-projekter" placeholder="Søg på navn, adresse, by, virksomhed, kontakt, notat" value="<?= e($filter['soeg']) ?>" class="soegefelt">
     </div>
     <div class="kolonne-vaelger">
         <button type="button" class="kolonne-vaelger-knap" id="kolonne-vaelger-knap" aria-expanded="false" aria-controls="kolonne-vaelger-panel">Vis/skjul kolonner</button>
@@ -108,9 +113,9 @@ require __DIR__ . '/inc/header.php';
             <th data-kolonne="by"><?= sorteringsLink('by', 'Adresse / by') ?></th>
             <th data-kolonne="byggestart"><?= sorteringsLink('byggestart', 'Byggestart') ?></th>
             <th data-kolonne="byggeslut"><?= sorteringsLink('byggeslut', 'Byggeslut') ?></th>
-            <th data-kolonne="hovedentreprenoer">Hovedentr./kunde</th>
-            <th data-kolonne="kontakt">Primær kontakt</th>
-            <th data-kolonne="ansvarlig">BMS-ansvarlig</th>
+            <th data-kolonne="hovedentreprenoer"><?= sorteringsLink('hovedentreprenoer', 'Hovedentr./kunde') ?></th>
+            <th data-kolonne="kontakt"><?= sorteringsLink('kontakt', 'Primær kontakt') ?></th>
+            <th data-kolonne="ansvarlig"><?= sorteringsLink('ansvarlig', 'BMS-ansvarlig') ?></th>
             <th data-kolonne="status"><?= sorteringsLink('aabenlukket', 'Status') ?></th>
             <th data-kolonne="salg"><?= sorteringsLink('salgsresultat', 'Salg') ?></th>
             <th data-kolonne="opdateret"><?= sorteringsLink('opdateret', 'Senest ændret') ?></th>
