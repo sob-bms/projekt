@@ -180,9 +180,11 @@ form fieldset table th, form fieldset table td { padding: 6px 4px; text-align: l
 .gem-filter-form, .glem-filter-form { display: flex; gap: 8px; align-items: center; margin: 0; }
 .gem-filter-form .link-knap, .glem-filter-form .link-knap { font-size: 0.85rem; }
 
-/* Værktøjslinje lige over projektlisten: resultattal + kolonnevælger. */
+/* Værktøjslinje lige over projektlisten: resultattal (+ evt. "ingen
+   resultater") til venstre, kolonnevælger til højre. */
 .tabel-vaerktoejer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-.ingen-resultater { color: var(--graa-tekst); margin: 0 0 12px; }
+.tabel-vaerktoejer-venstre { display: flex; align-items: center; gap: 12px; }
+.ingen-resultater { color: var(--graa-tekst); margin: 0; }
 
 .kolonne-vaelger { position: relative; }
 .kolonne-vaelger-knap {

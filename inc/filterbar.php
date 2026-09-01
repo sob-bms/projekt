@@ -26,18 +26,6 @@ $flereFiltreAktive = $filter['aabenlukket'] !== '' || $filter['salgsresultat'] !
     <input type="text" name="soeg" placeholder="Søg på navn, adresse, by, virksomhed, kontakt, notat" value="<?= e($filter['soeg']) ?>" class="soegefelt">
 
     <fieldset class="filter-gruppe">
-        <legend>Byggestart</legend>
-        <label class="inline">Fra <input type="month" name="byggestart_fra" value="<?= e($filter['byggestart_fra']) ?>"></label>
-        <label class="inline">Til <input type="month" name="byggestart_til" value="<?= e($filter['byggestart_til']) ?>"></label>
-        <select name="byggestart_status">
-            <option value="">Alle</option>
-            <option value="bekraeftet" <?= $filter['byggestart_status'] === 'bekraeftet' ? 'selected' : '' ?>>Bekræftet</option>
-            <option value="ikke_bekraeftet" <?= $filter['byggestart_status'] === 'ikke_bekraeftet' ? 'selected' : '' ?>>Ikke bekræftet</option>
-            <option value="ukendt" <?= $filter['byggestart_status'] === 'ukendt' ? 'selected' : '' ?>>Ukendt dato</option>
-        </select>
-    </fieldset>
-
-    <fieldset class="filter-gruppe">
         <legend>BMS-ansvarlig</legend>
         <select name="ansvarlig[]" multiple size="3" class="ansvarlig-multi">
             <?php foreach ($brugerListe as $b): ?>
@@ -49,6 +37,18 @@ $flereFiltreAktive = $filter['aabenlukket'] !== '' || $filter['salgsresultat'] !
             <option value="">Alle</option>
             <option value="tildelt" <?= $filter['ansvarlig_tildeling'] === 'tildelt' ? 'selected' : '' ?>>Tildelt</option>
             <option value="ikke_tildelt" <?= $filter['ansvarlig_tildeling'] === 'ikke_tildelt' ? 'selected' : '' ?>>Ikke tildelt</option>
+        </select>
+    </fieldset>
+
+    <fieldset class="filter-gruppe">
+        <legend>Byggestart</legend>
+        <label class="inline">Fra <input type="month" name="byggestart_fra" value="<?= e($filter['byggestart_fra']) ?>"></label>
+        <label class="inline">Til <input type="month" name="byggestart_til" value="<?= e($filter['byggestart_til']) ?>"></label>
+        <select name="byggestart_status">
+            <option value="">Alle</option>
+            <option value="bekraeftet" <?= $filter['byggestart_status'] === 'bekraeftet' ? 'selected' : '' ?>>Bekræftet</option>
+            <option value="ikke_bekraeftet" <?= $filter['byggestart_status'] === 'ikke_bekraeftet' ? 'selected' : '' ?>>Ikke bekræftet</option>
+            <option value="ukendt" <?= $filter['byggestart_status'] === 'ukendt' ? 'selected' : '' ?>>Ukendt dato</option>
         </select>
     </fieldset>
 

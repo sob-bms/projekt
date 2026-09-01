@@ -77,7 +77,10 @@ require __DIR__ . '/inc/header.php';
 <?php require __DIR__ . '/inc/filterbar.php'; ?>
 
 <div class="tabel-vaerktoejer">
-    <p class="resultat-tal"><?= (int)$antalIalt ?> projekt(er) fundet.</p>
+    <div class="tabel-vaerktoejer-venstre">
+        <p class="resultat-tal"><?= (int)$antalIalt ?> fundet.</p>
+        <?php if (!$projekter): ?><p class="ingen-resultater">Ingen projekter fundet.</p><?php endif; ?>
+    </div>
     <div class="kolonne-vaelger">
         <button type="button" class="kolonne-vaelger-knap" id="kolonne-vaelger-knap" aria-expanded="false" aria-controls="kolonne-vaelger-panel">Vis/skjul kolonner</button>
         <div class="kolonne-vaelger-panel" id="kolonne-vaelger-panel" hidden>
@@ -94,8 +97,6 @@ require __DIR__ . '/inc/header.php';
         </div>
     </div>
 </div>
-
-<?php if (!$projekter): ?><p class="ingen-resultater">Ingen projekter fundet.</p><?php endif; ?>
 
 <div class="tabel-scroll-top" id="tabel-scroll-top"><div></div></div>
 <div class="tabel-scroll" id="tabel-scroll">
